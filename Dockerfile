@@ -1,10 +1,10 @@
-FROM python:3.12-slim AS builder
+FROM python:3.14-slim AS builder
 WORKDIR /build
 COPY pyproject.toml README.md ./
 COPY src ./src
 RUN python -m pip install --no-cache-dir build && python -m build --wheel
 
-FROM python:3.12-slim
+FROM python:3.14-slim
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 SERVICEPILOT_DATA_DIR=/data
 RUN groupadd --gid 10001 servicepilot && useradd --uid 10001 --gid 10001 --create-home servicepilot \
     && mkdir /data && chown servicepilot:servicepilot /data
