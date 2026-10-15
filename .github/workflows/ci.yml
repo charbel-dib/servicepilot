@@ -1,0 +1,105 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_call:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.11', '3.12', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          python-version: ${{ matrix.python }}
+      - run: uv sync --frozen --extra dev
+      - run: uv run --frozen ruff check .
+      - run: uv run --frozen ruff format --check .
+      - run: uv run --frozen pytest --cov=servicepilot --cov-report=xml:reports/coverage.xml --cov-fail-under=80
+      - run: uv run --frozen servicepilot evaluate
+      - run: uv run --frozen python -m build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: python-reports-${{ matrix.python }}
+          path: |
+            reports/
+            dist/
+
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: '3.12'
+      - run: uv sync --frozen --extra dev
+      - run: uv run --frozen playwright install --with-deps chromium
+      - run: uv run --frozen python scripts/browser_smoke.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-screenshots
+          path: reports/*.png
+
+  java-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Compile and check HTTP contract
+        run: |
+          mkdir -p status-service/out
+          javac --release 17 -d status-service/out status-service/src/StatusServer.java
+          java --add-modules jdk.httpserver -cp status-service/out StatusServer &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID"' EXIT
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8001/health && break || sleep 1; done
+          python scripts/status_contract.py
+
+  dependency-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: '3.12'
+      - run: uv sync --frozen --extra dev
+      - name: Ensure the Docker runtime lock matches uv.lock
+        run: |
+          uv export --frozen --no-dev --no-emit-project --format requirements-txt --output-file requirements.lock > /dev/null
+          git diff --exit-code -- requirements.lock
+      - run: uv run --frozen pip-audit -r requirements.lock
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and smoke test the complete stack
+        run: |
+          docker compose up --build --wait --wait-timeout 180
+          trap 'docker compose logs; docker compose down -v' EXIT
+          curl --fail --retry 10 --retry-delay 2 http://127.0.0.1:8000/ready
+          python - <<'PY'
+          import json, urllib.request
+          request = urllib.request.Request(
+              'http://127.0.0.1:8000/api/runs',
+              data=json.dumps({'query':'Problème de connexion Atlas'}).encode(),
+              headers={'Content-Type':'application/json', 'Authorization':'Bearer demo-alice-token'},
+          )
+          result = json.load(urllib.request.urlopen(request, timeout=30))
+          assert result['status'] == 'complete', result
+          assert 'degraded' in result['answer']['summary'], result
+          PY

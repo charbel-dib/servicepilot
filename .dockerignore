@@ -1,0 +1,13 @@
+.git
+.venv
+.env
+.env.*
+.servicepilot
+tests
+reports
+dist
+build
+__pycache__
+.pytest_cache
+.ruff_cache
+*.zip

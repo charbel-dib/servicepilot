@@ -1,0 +1,36 @@
+services:
+  app:
+    build: .
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      SERVICEPILOT_ENVIRONMENT: ${SERVICEPILOT_ENVIRONMENT:-demo}
+      SERVICEPILOT_PROVIDER: ${SERVICEPILOT_PROVIDER:-offline}
+      SERVICEPILOT_API_KEY: ${SERVICEPILOT_API_KEY:-}
+      SERVICEPILOT_MODEL: ${SERVICEPILOT_MODEL:-gpt-4.1-mini}
+      SERVICEPILOT_IDENTITIES_JSON: ${SERVICEPILOT_IDENTITIES_JSON:-}
+      SERVICEPILOT_STATUS_URL: http://status:8001
+      SERVICEPILOT_DATA_DIR: /data
+    volumes:
+      - servicepilot-data:/data
+    depends_on:
+      status:
+        condition: service_started
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+
+  status:
+    build: ./status-service
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+
+volumes:
+  servicepilot-data:

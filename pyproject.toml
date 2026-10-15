@@ -1,0 +1,48 @@
+[build-system]
+requires = ["hatchling>=1.26,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "servicepilot"
+version = "0.1.0"
+description = "A small agent SDK and support assistant with controlled tools and auditable approvals."
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+license = "MIT"
+authors = [{name = "Charbel Dib"}]
+dependencies = [
+  "fastapi>=0.115,<1", "uvicorn>=0.30,<1", "pydantic-settings>=2.6,<3",
+  "langgraph>=1,<2", "langgraph-checkpoint-sqlite>=3,<4",
+  "langchain-openai>=1,<2", "httpx>=0.27,<1",
+  "faiss-cpu>=1.9,<2", "scikit-learn>=1.5,<2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<10", "pytest-cov>=6,<8", "ruff>=0.12,<1", "build>=1,<2", "pip-audit>=2,<3", "playwright>=1.50,<2"]
+semantic = ["sentence-transformers>=3,<6"]
+
+[project.scripts]
+servicepilot = "servicepilot.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/servicepilot"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501", "B008"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+markers = ["live: requires a real provider and explicit opt-in"]
+
+[tool.coverage.run]
+source = ["servicepilot"]
+omit = ["*/cli.py", "*/__main__.py"]
+
+[tool.coverage.report]
+show_missing = true

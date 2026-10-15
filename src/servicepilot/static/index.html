@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="ServicePilot — diagnostic de support, sources et actions contrôlées.">
+  <title>ServicePilot · Support workspace</title>
+  <link rel="icon" href="data:,"><link rel="stylesheet" href="/static/style.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+<aside>
+  <a class="brand" href="/"><span class="mark">S</span> ServicePilot<span class="version">0.1</span></a>
+  <div class="nav-label">WORKSPACE</div>
+  <button class="nav active" id="new-run">◈ &nbsp; Nouveau diagnostic</button>
+  <a class="nav" href="/docs" target="_blank" rel="noreferrer">↗ &nbsp; Documentation API</a>
+  <div class="nav-label recent-label">DIAGNOSTICS RÉCENTS</div>
+  <div id="history" class="history"><span class="muted">Aucun diagnostic pour le moment.</span></div>
+  <div class="sidebar-bottom"><span class="online-dot"></span> Données de démonstration<br><span class="muted">Actions locales · approbation humaine</span></div>
+</aside>
+<div class="workspace">
+  <header><span>SUPPORT / <strong>Diagnostic</strong></span><div id="mode" class="badge">Chargement…</div></header>
+  <main>
+    <section class="intro"><div class="eyebrow">SUPPORT, AVEC DES PREUVES</div>
+      <h1>Comprendre avant d'agir.</h1>
+      <p>Procédures, état des services et incidents réunis dans un diagnostic.<br>Vous gardez la main sur chaque création de ticket.</p>
+    </section>
+    <section class="identity panel" aria-label="Identité et autorisations">
+      <div><label for="identity">Identité</label><select id="identity"><option value="">Jeton personnel</option></select></div>
+      <div class="token"><label for="token">Jeton d'accès</label><input id="token" type="password" autocomplete="off" placeholder="Bearer token"></div>
+      <div><span class="label">Périmètre autorisé</span><span id="scope" class="muted">Connexion requise</span></div>
+    </section>
+    <section class="composer panel">
+      <label for="query">Que se passe-t-il ?</label>
+      <textarea id="query" maxlength="2000" rows="3" placeholder="Ex. Je n'arrive plus à accéder à Atlas. Est-ce un problème connu ?"></textarea>
+      <div class="composer-footer"><span class="muted">N'incluez aucun mot de passe ou secret.</span><button id="submit" class="primary">Lancer le diagnostic <span>↗</span></button></div>
+    </section>
+    <div class="examples" aria-label="Exemples de demandes">
+      <button data-query="Je n'arrive plus à accéder à Atlas. Est-ce un incident connu ?">Incident Atlas ↗</button>
+      <button data-query="Quelle est la procédure pour réinitialiser mon accès VPN ?">Accès VPN ↗</button>
+      <button data-query="Crée un ticket pour mon problème de connexion Atlas.">Préparer un ticket ↗</button>
+    </div>
+    <p id="error" class="error" role="alert" hidden></p>
+    <div id="busy" class="busy" role="status" hidden><span class="spinner"></span> Consultation des sources et outils…</div>
+    <section id="result" hidden aria-live="polite">
+      <div class="section-title"><h2>Résultat du diagnostic</h2><span id="result-status" class="badge"></span></div>
+      <div class="result-grid"><div>
+        <article class="panel answer"><div class="eyebrow">SYNTHÈSE</div><p id="summary"></p><ul id="actions"></ul><div id="ticket-result" class="ticket-result" hidden></div></article>
+        <article id="approval" class="panel approval" hidden><div class="eyebrow">VOTRE APPROBATION EST NÉCESSAIRE</div><h3 id="proposal-title"></h3><p id="proposal-description"></p><p id="proposal-meta" class="muted"></p><details><summary>Empreinte de la proposition</summary><code id="digest"></code></details><div class="approval-buttons"><button id="reject" class="secondary">Refuser</button><button id="approve" class="primary">Approuver et créer le ticket</button></div></article>
+        <article class="panel sources"><h3>Sources consultées</h3><div id="sources"></div></article>
+      </div><article class="panel execution"><div class="eyebrow">EXÉCUTION</div><h3>Une trace lisible.</h3><p class="muted">Appels d'outils et résultats d'exécution.</p><ol id="trace"></ol><div id="run-id" class="run-id"></div></article></div>
+    </section>
+    <section id="empty" class="empty"><div class="empty-icon">◈</div><h3>Le bon outil, au bon moment.</h3><p>L'assistant consulte les informations utiles à votre demande.<br>Une proposition de ticket reste en attente tant que vous ne l'approuvez pas.</p></section>
+    <footer>ServicePilot · Projet personnel open source <span id="embedding-note"></span></footer>
+  </main>
+</div>
+</body></html>
