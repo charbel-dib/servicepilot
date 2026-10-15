@@ -19,7 +19,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8,<10", "pytest-cov>=6,<8", "ruff>=0.12,<1", "build>=1,<2", "pip-audit>=2,<3", "playwright>=1.50,<2"]
-semantic = ["sentence-transformers>=3,<6"]
+semantic = ["sentence-transformers>=3,<7"]
 
 [project.scripts]
 servicepilot = "servicepilot.cli:main"
