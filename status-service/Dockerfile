@@ -1,9 +1,9 @@
-FROM eclipse-temurin:17-jdk-alpine AS builder
+FROM eclipse-temurin:25-jdk-alpine AS builder
 WORKDIR /build
 COPY src/StatusServer.java .
 RUN javac --release 17 -d out StatusServer.java
 
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 RUN addgroup -g 10001 app && adduser -D -u 10001 -G app app
 WORKDIR /app
 COPY --from=builder /build/out ./
